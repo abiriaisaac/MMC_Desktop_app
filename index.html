@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:;">
+<title>MMC Steel Division — BOM System</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f4f6f9;--surface:#fff;--card:#f0f4fb;--border:#d0d7e3;--txt:#1a1a2e;--txt2:#555e7a;--txt3:#8a94b0;--accent:#1a6fc4;--accent2:#0d9e6a;--accent3:#c0392b;--accentWarn:#d97706;--head-bg:#1a3060;--head-txt:#fff;--row-alt:#f0f4fb;--row-hover:#dbeafe;--btn:#1a6fc4;--btn-txt:#fff;--input-bg:#fff;--input-border:#c8d0df;--tag-info-bg:rgba(26,111,196,.13);--tag-red-bg:rgba(192,57,43,.12);--shadow:0 2px 12px rgba(26,111,196,.10);--sidebar-w:270px;}
+.t-dark{--bg:#0A0E14;--surface:#0F1520;--card:#16202E;--border:#243040;--txt:#D8E4F0;--txt2:#8FA4BA;--txt3:#4A6070;--accent:#4A90D9;--accent2:#12C87A;--accent3:#E04060;--accentWarn:#F0A020;--head-bg:#0b1e3d;--head-txt:#94b8ff;--row-alt:#16202E;--row-hover:#1D2A3A;--btn:#4A90D9;--btn-txt:#fff;--input-bg:#16202E;--input-border:#243040;--tag-info-bg:rgba(74,144,217,.2);--tag-red-bg:rgba(224,64,96,.18);--shadow:0 2px 20px rgba(0,0,0,.4);}
+.t-green{--bg:#E6F2E6;--surface:#FFF;--card:#EAF6EA;--border:#B8D9B8;--txt:#1A3B1A;--txt2:#3B6E3B;--txt3:#6F9E6F;--accent:#2E7D32;--accent2:#1B5E20;--accent3:#C62828;--accentWarn:#F57C00;--head-bg:#1B5E20;--head-txt:#FFF;--row-alt:#EAF6EA;--row-hover:#D0E8D0;--btn:#2E7D32;--btn-txt:#FFF;--input-bg:#FFF;--input-border:#B8D9B8;--tag-info-bg:rgba(46,125,50,.12);--tag-red-bg:rgba(198,40,40,.12);--shadow:0 2px 12px rgba(46,125,50,.15);}
+.t-pink{--bg:#FCE4EC;--surface:#FFF;--card:#FCE4EC;--border:#F48FB1;--txt:#4A1E2C;--txt2:#7B4A5A;--txt3:#B38A9A;--accent:#C2185B;--accent2:#AD1457;--accent3:#B71C1C;--accentWarn:#FF8A65;--head-bg:#AD1457;--head-txt:#FFF;--row-alt:#FCE4EC;--row-hover:#F8BBD0;--btn:#C2185B;--btn-txt:#FFF;--input-bg:#FFF;--input-border:#F48FB1;--tag-info-bg:rgba(194,24,91,.12);--tag-red-bg:rgba(183,28,28,.12);--shadow:0 2px 12px rgba(194,24,91,.2);}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--txt);}
+.topbar{background:var(--surface);border-bottom:2px solid var(--border);padding:0 14px;display:flex;align-items:center;justify-content:space-between;height:52px;flex-shrink:0;box-shadow:var(--shadow);position:sticky;top:0;z-index:200;-webkit-app-region:drag;}
+.topbar-right,.btn,.brand{-webkit-app-region:no-drag;}
+.brand{display:flex;align-items:center;gap:10px;}
+.brand-mark{width:32px;height:32px;background:linear-gradient(135deg,var(--head-bg),var(--accent));border-radius:7px;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:9px;color:#fff;}
+.brand-name{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:var(--txt);}
+.brand-sub{font-size:9px;color:var(--txt3);letter-spacing:.05em;text-transform:uppercase;}
+.topbar-right{display:flex;gap:5px;align-items:center;flex-wrap:wrap;}
+.theme-bar{display:flex;align-items:center;gap:5px;background:var(--card);border:1px solid var(--border);border-radius:18px;padding:3px 9px;}
+.theme-label{font-size:9px;color:var(--txt3);font-weight:700;letter-spacing:.07em;text-transform:uppercase;}
+.swatches{display:flex;gap:4px;}
+.swatch{width:14px;height:14px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:transform .15s,border-color .15s;}
+.swatch:hover{transform:scale(1.3);}
+.swatch.active{border-color:var(--txt);}
+.swatch-light{background:linear-gradient(135deg,#1a6fc4,#e8ecf2);}
+.swatch-dark{background:linear-gradient(135deg,#0b1e3d,#4A90D9);}
+.swatch-green{background:linear-gradient(135deg,#2E7D32,#E6F2E6);}
+.swatch-pink{background:linear-gradient(135deg,#C2185B,#FCE4EC);}
+.btn{display:inline-flex;align-items:center;gap:4px;padding:5px 11px;border:none;border-radius:6px;font-family:'IBM Plex Sans',sans-serif;font-size:11px;font-weight:500;cursor:pointer;transition:opacity .15s;white-space:nowrap;background:var(--btn);color:var(--btn-txt);}
+.btn:hover{opacity:.85;}
+.btn-outline{background:transparent;color:var(--accent);border:1px solid var(--border);}
+.btn-outline:hover{background:var(--card);}
+.btn-success{background:#16a34a;color:#fff;}
+.btn-warn{background:var(--accentWarn);color:#fff;}
+.btn-danger{background:var(--accent3);color:#fff;}
+.app-body{display:flex;height:calc(100vh - 52px);overflow:hidden;}
+.sidebar{width:var(--sidebar-w);min-width:var(--sidebar-w);background:var(--surface);border-right:1px solid var(--border);overflow-y:auto;padding:10px 8px;display:flex;flex-direction:column;gap:8px;transition:width .25s,min-width .25s,padding .25s;}
+.sidebar.collapsed{width:0;min-width:0;padding:0;overflow:hidden;}
+.sidebar-toggle{position:fixed;left:var(--sidebar-w);top:50%;transform:translateY(-50%);z-index:150;background:var(--accent);color:#fff;border:none;width:14px;height:40px;border-radius:0 5px 5px 0;cursor:pointer;font-size:10px;transition:left .25s;}
+.sidebar-toggle.collapsed{left:0;}
+.main-content{flex:1;overflow-y:auto;padding:14px 16px;}
+.chart-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:9px;margin-bottom:5px;}
+.chart-title{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.05em;margin-bottom:7px;}
+.sb-stat{display:flex;justify-content:space-between;align-items:center;padding:3px 6px;border-radius:4px;background:var(--bg);margin-bottom:3px;}
+.sb-stat-label{font-size:10px;color:var(--txt2);}
+.sb-stat-val{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:var(--accent);}
+.sb-section-item{display:flex;align-items:center;gap:5px;padding:2px 4px;border-radius:4px;}
+.sb-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.sb-section-name{font-size:9px;color:var(--txt2);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sb-section-count{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--accent);font-weight:700;}
+.main-wrap{max-width:1700px;margin:0 auto;}
+.page-hdr{margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border);}
+.page-hdr h1{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;margin-bottom:2px;}
+.page-hdr p{font-size:11px;color:var(--txt2);}
+.stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin-bottom:10px;}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:7px;padding:9px 12px;}
+.stat-val{font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:700;color:var(--accent);line-height:1;margin-bottom:1px;}
+.stat-lbl{font-size:9px;color:var(--txt2);}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:10px;box-shadow:var(--shadow);}
+.card-hdr{background:var(--card);padding:8px 13px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);border-radius:8px 8px 0 0;}
+.card-title{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;color:var(--accent);display:flex;align-items:center;gap:7px;}
+.card-body{padding:11px;}
+.grid{display:grid;gap:7px;}
+.g4{grid-template-columns:repeat(4,1fr);}
+@media(max-width:900px){.g4{grid-template-columns:repeat(2,1fr)}}
+.field{display:flex;flex-direction:column;gap:3px;}
+.field label{font-size:9px;font-family:'JetBrains Mono',monospace;color:var(--txt2);letter-spacing:.04em;text-transform:uppercase;}
+.field input,.field select{background:var(--input-bg);border:1px solid var(--input-border);border-radius:5px;color:var(--txt);padding:5px 8px;font-size:12px;font-family:'IBM Plex Sans',sans-serif;width:100%;}
+.field input:focus,.field select:focus{outline:none;border-color:var(--accent);}
+.info-box{background:var(--tag-info-bg);border-radius:7px;padding:8px 12px;font-size:11px;color:var(--txt2);margin-bottom:9px;}
+.info-box strong{color:var(--accent2);}
+.tabs{display:flex;border-bottom:2px solid var(--border);margin-bottom:11px;}
+.tab-btn{padding:7px 15px;border:none;background:transparent;color:var(--txt3);font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;letter-spacing:.04em;text-transform:uppercase;}
+.tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);}
+.tab-panel{display:none;}
+.tab-panel.active{display:block;}
+.bom-tbl-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:8px;}
+.bom-tbl{width:100%;border-collapse:collapse;font-size:11px;min-width:1100px;}
+.bom-tbl thead th{background:var(--head-bg);color:var(--head-txt);font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:8px 6px;text-align:left;position:sticky;top:0;z-index:2;}
+.bom-tbl tbody tr{border-bottom:1px solid var(--border);transition:background .1s;}
+.bom-tbl tbody tr:nth-child(even){background:var(--row-alt);}
+.bom-tbl tbody tr:hover{background:var(--row-hover);}
+.bom-tbl td{padding:3px 3px;vertical-align:top;}
+.bom-tbl select,.bom-tbl input[type=text],.bom-tbl input[type=number]{width:100%;padding:4px 5px;font-size:11px;border:1px solid var(--input-border);border-radius:4px;background:var(--input-bg);color:var(--txt);}
+.bom-tbl select:focus,.bom-tbl input:focus{outline:none;border-color:var(--accent);}
+.bom-tbl input[readonly]{background:var(--card);color:var(--txt3);cursor:default;}
+.cw{display:flex;align-items:center;gap:2px;}
+.cw select,.cw input{flex:1;min-width:0;}
+.icon-btn{flex-shrink:0;width:18px;height:18px;border:none;border-radius:3px;cursor:pointer;font-size:9px;display:flex;align-items:center;justify-content:center;transition:all .12s;opacity:0;}
+.cw:hover .icon-btn,.cw:focus-within .icon-btn{opacity:1;}
+.copy-btn{background:var(--card);color:var(--txt3);}
+.copy-btn:hover{background:var(--accent);color:#fff;opacity:1!important;}
+.edit-btn{background:var(--accent2);color:#fff;}
+.edit-btn:hover{background:var(--accent);opacity:1!important;}
+.plant-type-selector{display:flex;gap:7px;margin-bottom:9px;}
+.plant-type-btn{flex:1;padding:8px 10px;border:2px solid var(--border);border-radius:7px;background:var(--card);cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;color:var(--txt2);text-align:center;transition:all .15s;}
+.plant-type-btn.active{border-color:var(--accent);background:var(--tag-info-bg);color:var(--accent);}
+.plant-type-label{font-size:8px;display:block;margin-top:1px;font-weight:400;opacity:.7;}
+.btn-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px;}
+.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:1000;justify-content:center;align-items:center;}
+.modal-content{background:var(--surface);border-radius:10px;width:420px;max-width:90%;padding:18px;box-shadow:0 10px 25px rgba(0,0,0,.2);border:1px solid var(--border);}
+.modal-content h3{margin-bottom:13px;font-family:'JetBrains Mono',monospace;color:var(--accent);font-size:12px;}
+.modal-list{max-height:280px;overflow-y:auto;border:1px solid var(--border);border-radius:5px;margin-bottom:12px;background:var(--input-bg);}
+.modal-item{display:flex;justify-content:space-between;align-items:center;padding:7px 11px;border-bottom:1px solid var(--border);font-size:11px;}
+.modal-item:last-child{border-bottom:none;}
+.modal-item.builtin span{color:var(--txt3);}
+.del-btn{cursor:pointer;color:var(--accent3);font-weight:bold;padding:1px 6px;border-radius:3px;background:var(--tag-red-bg);font-size:10px;}
+.del-btn:hover{opacity:.7;}
+.builtin .del-btn{display:none;}
+.modal-add{display:flex;gap:7px;}
+.modal-add input{flex:1;padding:5px 9px;border:1px solid var(--border);border-radius:5px;background:var(--input-bg);color:var(--txt);font-size:12px;}
+.close-modal{float:right;font-size:18px;cursor:pointer;color:var(--txt3);}
+.tbl-wrap{overflow-x:auto;}
+table.db-table{width:100%;border-collapse:collapse;font-size:11px;}
+table.db-table th{background:var(--head-bg);color:var(--head-txt);font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:7px 9px;text-align:left;}
+table.db-table td{padding:6px 9px;border-bottom:1px solid var(--border);color:var(--txt2);vertical-align:middle;}
+table.db-table tr:nth-child(even) td{background:var(--row-alt);}
+table.db-table tr:hover td{background:var(--row-hover);color:var(--txt);}
+.btn-row{font-size:9px;padding:3px 7px;border-radius:4px;border:none;cursor:pointer;font-family:'JetBrains Mono',monospace;}
+.btn-row-edit{background:var(--tag-info-bg);color:var(--accent);}
+.btn-row-xl{background:rgba(217,119,6,.13);color:var(--accentWarn);}
+.btn-row-del{background:var(--tag-red-bg);color:var(--accent3);}
+.toast{position:fixed;bottom:18px;right:18px;z-index:9999;background:var(--accent2);color:#fff;padding:9px 14px;border-radius:7px;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;box-shadow:0 6px 22px rgba(0,0,0,.3);transform:translateY(12px);opacity:0;transition:all .22s;pointer-events:none;}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast.error{background:var(--accent3);}
+.toast.info{background:var(--accent);}
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+</style>
+</head>
+<body id="appRoot">
+<div class="toast" id="toast"></div>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-mark">MMC</div>
+    <div>
+      <div class="brand-name">MMC Steel Division — BOM System</div>
+      <div class="brand-sub">Section → Subsystem → Component → Specification</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="theme-bar">
+      <span class="theme-label">Theme</span>
+      <div class="swatches">
+        <div class="swatch swatch-light active" onclick="setTheme('light',this)" title="Light"></div>
+        <div class="swatch swatch-dark"  onclick="setTheme('dark',this)"  title="Dark"></div>
+        <div class="swatch swatch-green" onclick="setTheme('green',this)" title="Green"></div>
+        <div class="swatch swatch-pink"  onclick="setTheme('pink',this)"  title="Pink"></div>
+      </div>
+    </div>
+    <button class="btn btn-success" onclick="startNewBOM()">＋ New BOM</button>
+    <button class="btn" onclick="switchTab('db')">🗄 DB (<span id="topbar-count">0</span>)</button>
+    <button class="btn btn-success" onclick="saveBOM()">💾 Save</button>
+    <button class="btn btn-warn" onclick="exportExcel()">📊 Export</button>
+    <button class="btn btn-outline" onclick="importExcelNative()">📂 Import</button>
+  </div>
+</div>
+
+<div class="app-body">
+  <div class="sidebar" id="sidebar">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.07em;padding:2px 2px 4px;">📊 Analytics</div>
+    <div class="chart-card">
+      <div class="chart-title">Summary</div>
+      <div class="sb-stat"><span class="sb-stat-label">Total Rows</span><span class="sb-stat-val" id="sb-rows">0</span></div>
+      <div class="sb-stat"><span class="sb-stat-label">Plant Sections</span><span class="sb-stat-val" id="sb-sections">0</span></div>
+      <div class="sb-stat"><span class="sb-stat-label">Subsystems</span><span class="sb-stat-val" id="sb-subs">0</span></div>
+      <div class="sb-stat"><span class="sb-stat-label">Unique Components</span><span class="sb-stat-val" id="sb-comps">0</span></div>
+      <div class="sb-stat" style="background:rgba(13,158,106,.1);">
+        <span class="sb-stat-label" style="color:var(--accent2);">Total Qty</span>
+        <span class="sb-stat-val" style="color:var(--accent2);" id="sb-total">0</span>
+      </div>
+    </div>
+    <div class="chart-card"><div class="chart-title">Rows by Section</div><div style="position:relative;height:190px;"><canvas id="chartSection"></canvas></div></div>
+    <div class="chart-card"><div class="chart-title">Top Subsystems</div><div style="position:relative;height:170px;"><canvas id="chartSub"></canvas></div></div>
+    <div class="chart-card"><div class="chart-title">Mill vs Roll Forming</div><div style="position:relative;height:150px;"><canvas id="chartPT"></canvas></div></div>
+    <div class="chart-card"><div class="chart-title">Section Breakdown</div><div id="sb-list"></div></div>
+  </div>
+  <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()">◀</button>
+
+  <div class="main-content">
+    <div class="main-wrap">
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('entry')">📋 BOM Entry</button>
+        <button class="tab-btn" onclick="switchTab('db')">🗄 Database (<span id="tab-db-count">0</span>)</button>
+      </div>
+
+      <!-- ENTRY TAB -->
+      <div class="tab-panel active" id="tab-entry">
+        <div class="page-hdr">
+          <h1>MMC Steel Mill &amp; Roll Forming — Bill of Materials</h1>
+          <p>4-level cascade: Plant Section → Subsystem → Component → Specification. All dropdowns populate automatically.</p>
+        </div>
+
+        <div class="card">
+          <div class="card-hdr">
+            <div class="card-title">▌ Project Identification</div>
+            <span style="font-size:9px;color:var(--accent2);font-family:'JetBrains Mono',monospace;">Plant type controls available sections</span>
+          </div>
+          <div class="card-body">
+            <div style="margin-bottom:10px;">
+              <div style="font-size:9px;font-family:'JetBrains Mono',monospace;color:var(--txt2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;">Plant Type</div>
+              <div class="plant-type-selector">
+                <div class="plant-type-btn active" id="ptBtn-milling"     onclick="setPlantType('milling')">🏭 Milling<span class="plant-type-label">Steel Rolling Mill</span></div>
+                <div class="plant-type-btn"        id="ptBtn-rollforming" onclick="setPlantType('rollforming')">🔩 Roll Forming<span class="plant-type-label">Iron Sheet / Profile</span></div>
+              </div>
+            </div>
+            <div class="grid g4">
+              <div class="field"><label>BOM Reference No.</label><input id="bomRef"    placeholder="e.g. BOM-MMC-2025-001"></div>
+              <div class="field"><label>Date</label>             <input id="bomDate"   type="date"></div>
+              <div class="field"><label>Prepared By</label>      <input id="prepBy"    placeholder="Engineer name"></div>
+              <div class="field"><label>Approved By</label>      <input id="appBy"     placeholder="Approver name"></div>
+              <div class="field"><label>Est. Total Cost (UGX)</label><input id="totalCost" type="number" placeholder="0"></div>
+              <div class="field"><label>Revision</label>         <input id="revision"  placeholder="Rev 0"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="stats-row">
+          <div class="stat-card"><div class="stat-val" id="st-rows">0</div><div class="stat-lbl">BOM Rows</div></div>
+          <div class="stat-card"><div class="stat-val" id="st-sections">0</div><div class="stat-lbl">Plant Sections</div></div>
+          <div class="stat-card"><div class="stat-val" id="st-subs">0</div><div class="stat-lbl">Subsystems</div></div>
+          <div class="stat-card"><div class="stat-val" id="st-comps">0</div><div class="stat-lbl">Unique Components</div></div>
+          <div class="stat-card"><div class="stat-val" id="st-total">0</div><div class="stat-lbl">Total Qty</div></div>
+        </div>
+
+        <div class="info-box">
+          <strong>✅ How it works:</strong> Selecting a <em>Plant Section</em> fills Subsystems. Selecting a <em>Subsystem</em> fills Components. Selecting a <em>Component</em> fills Specifications. Use ✏️ on any dropdown to add custom options. BOMs are saved to your local <strong>AppData</strong> folder automatically.
+        </div>
+
+        <div class="card">
+          <div class="card-hdr">
+            <div class="card-title">▌ BOM Line Items <span id="plant-type-indicator" style="font-size:9px;padding:2px 8px;border-radius:3px;background:var(--tag-info-bg);color:var(--accent);">🏭 MILLING</span></div>
+            <div style="display:flex;gap:5px;">
+              <button class="btn btn-outline" style="font-size:10px;" onclick="addRow()">+ Add Row</button>
+              <button class="btn btn-outline" style="font-size:10px;" onclick="addRows(5)">+ Add 5</button>
+              <button class="btn btn-outline" style="font-size:10px;" onclick="addRows(10)">+ Add 10</button>
+            </div>
+          </div>
+          <div class="card-body" style="padding:0;">
+            <div class="bom-tbl-wrap">
+              <table class="bom-tbl">
+                <colgroup>
+                  <col style="width:160px">
+                  <col style="width:160px">
+                  <col style="width:175px">
+                  <col style="width:235px">
+                  <col style="width:155px">
+                  <col style="width:65px">
+                  <col style="width:60px">
+                  <col style="width:68px">
+                  <col style="width:28px">
+                </colgroup>
+                <thead>
+                  <tr>
+                    <th>Plant Section</th><th>Subsystem</th><th>Component</th>
+                    <th>Specification</th><th>Notes / Remarks</th>
+                    <th>Qty/Unit</th><th># Units</th><th>Total</th><th></th>
+                  </tr>
+                </thead>
+                <tbody id="tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="btn-actions">
+          <button class="btn btn-success" onclick="saveBOM()">💾 Save to Database</button>
+          <button class="btn btn-warn"    onclick="exportExcel()">📊 Export Excel</button>
+          <button class="btn btn-warn"    onclick="importExcelNative()">📂 Import Excel</button>
+          <button class="btn btn-danger"  onclick="clearRows()">🗑 Clear All</button>
+        </div>
+      </div>
+
+      <!-- DB TAB -->
+      <div class="tab-panel" id="tab-db">
+        <div class="page-hdr">
+          <h1>🗄️ BOM Database</h1>
+          <p>All saved BOMs — stored in your AppData folder. Load, export, or delete.</p>
+        </div>
+        <div style="display:flex;gap:7px;margin-bottom:10px;flex-wrap:wrap;align-items:center;">
+          <span style="font-size:11px;">BOMs: <strong id="db-total">0</strong> &nbsp;|&nbsp; Est. Value: <strong id="db-value">0</strong> UGX</span>
+          <div style="margin-left:auto;display:flex;gap:5px;">
+            <button class="btn btn-success" onclick="startNewBOM()">＋ New</button>
+            <button class="btn btn-warn"    onclick="exportAllBOMs()">⬇ Export All</button>
+            <button class="btn btn-danger"  onclick="clearDatabase()">🗑 Clear DB</button>
+          </div>
+        </div>
+        <div class="tbl-wrap">
+          <table class="db-table">
+            <thead><tr><th>#</th><th>BOM Ref</th><th>Plant Type</th><th>Rows</th><th>Saved At</th><th>Est. Cost (UGX)</th><th>Actions</th></tr></thead>
+            <tbody id="db-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Custom item editor modal -->
+<div id="customModal" class="modal">
+  <div class="modal-content">
+    <span class="close-modal" onclick="closeModal()">&times;</span>
+    <h3 id="modalTitle">Edit Custom Options</h3>
+    <div id="modalList" class="modal-list"></div>
+    <div class="modal-add">
+      <input type="text" id="newCustomVal" placeholder="New option…" onkeydown="if(event.key==='Enter')addFromModal()">
+      <button class="btn btn-success" onclick="addFromModal()">Add</button>
+    </div>
+  </div>
+</div>
+
+<script src="bom-data.js"></script>
+<script src="renderer.js"></script>
+</body>
+</html>
